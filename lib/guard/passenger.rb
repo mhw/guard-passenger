@@ -76,7 +76,7 @@ module Guard
       def cli_stop
         cmd_parts = []
         cmd_parts << "--port #{port}" if port != 3000
-        cmd_parts << "--pid_file #{pid_file}" if pid_file
+        cmd_parts << "--pid-file #{pid_file}" if pid_file
         cmd_parts.join(' ')
       end
 
