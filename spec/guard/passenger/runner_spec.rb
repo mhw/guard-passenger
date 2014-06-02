@@ -57,13 +57,13 @@ describe Guard::Passenger::Runner do
   end
 
   describe '#passenger_standalone_installed?' do
-    it 'should not have passenger >= 3 installed' do
-      subject.should_receive(:gem).with("passenger", ">=3.0.0").and_raise(Gem::LoadError)
+    it 'should not have passenger < 3 installed' do
+      stub_const 'Guard::Passenger::Runner::PASSENGER_VERSION', Gem::Version.new('1')
       subject.passenger_standalone_installed?.should be_false
     end
 
     it 'should have passenger >= 3 installed' do
-      subject.should_receive(:gem).with("passenger", ">=3.0.0").and_return(true)
+      stub_const 'Guard::Passenger::Runner::PASSENGER_VERSION', Gem::Version.new('4')
       subject.passenger_standalone_installed?.should be_true
     end
   end
@@ -100,15 +100,43 @@ describe Guard::Passenger::Runner do
   end
 
   describe '#restart_passenger' do
-    it 'should call "touch tmp/restart.txt"' do
+    it 'should call "touch tmp/restart.txt" for Passenger < 4.0.31' do
+      stub_const 'Guard::Passenger::Runner::PASSENGER_VERSION', Gem::Version.new('3')
+
       subject.should_receive(:system).with('touch tmp/restart.txt')
       expect {
         quietly { subject.restart_passenger }
       }.to throw_symbol(:task_has_failed)
     end
 
+    it 'should call "passenger-config restart-app" for Passenger >= 4.0.31' do
+      stub_const 'Guard::Passenger::Runner::PASSENGER_VERSION', Gem::Version.new('5')
+
+      subject.should_receive(:system).with("passenger-config restart-app #{ Dir.getwd }")
+      expect {
+        quietly { subject.restart_passenger }
+      }.to throw_symbol(:task_has_failed)
+    end
+
     context "restart succeed" do
-      before(:each) { subject.should_receive(:system).with('touch tmp/restart.txt').and_return(true) }
+      context 'for Passenger < 4.0.31' do
+        before(:each) { stub_const 'Guard::Passenger::Runner::PASSENGER_VERSION', Gem::Version.new('3') }
+        before(:each) { subject.should_receive(:system).with('touch tmp/restart.txt').and_return(true) }
+
+        it 'should display a message' do
+          Guard::UI.should_receive(:info).with("Passenger successfully restarted.")
+          subject.restart_passenger
+        end
+
+        it 'should return true if restart succeeds' do
+          subject.restart_passenger.should be_true
+        end
+      end
+    end
+
+    context 'for Passenger >= 4.0.31' do
+      before(:each) { stub_const 'Guard::Passenger::Runner::PASSENGER_VERSION', Gem::Version.new('5') }
+      before(:each) { subject.should_receive(:system).with("passenger-config restart-app #{ Dir.getwd }").and_return(true) }
 
       it 'should display a message' do
         Guard::UI.should_receive(:info).with("Passenger successfully restarted.")
@@ -120,20 +148,41 @@ describe Guard::Passenger::Runner do
       end
     end
 
-    context "restart succeed" do
-      before(:each) { subject.should_receive(:system).with('touch tmp/restart.txt').and_return(false) }
+    context "restart failed" do
+      context 'for Passenger < 4.0.31' do
+        before(:each) { stub_const 'Guard::Passenger::Runner::PASSENGER_VERSION', Gem::Version.new('3') }
+        before(:each) { subject.should_receive(:system).with('touch tmp/restart.txt').and_return(false) }
 
-      it 'should display a message' do
-        Guard::UI.should_receive(:error).with("Passenger failed to restart!")
-        expect {
-          quietly { subject.restart_passenger }
-        }.to throw_symbol(:task_has_failed)
+        it 'should display a message' do
+          Guard::UI.should_receive(:error).with("Passenger failed to restart!")
+          expect {
+            quietly { subject.restart_passenger }
+          }.to throw_symbol(:task_has_failed)
+        end
+
+        it 'should return false if restart fails' do
+          expect {
+            quietly { subject.restart_passenger.should be_false }
+          }.to throw_symbol(:task_has_failed)
+        end
       end
 
-      it 'should return false if restart fails' do
-        expect {
-          quietly { subject.restart_passenger.should be_false }
-        }.to throw_symbol(:task_has_failed)
+      context 'for Passenger >= 4.0.31' do
+        before(:each) { stub_const 'Guard::Passenger::Runner::PASSENGER_VERSION', Gem::Version.new('5') }
+        before(:each) { subject.should_receive(:system).with("passenger-config restart-app #{ Dir.getwd }").and_return(false) }
+
+        it 'should display a message' do
+          Guard::UI.should_receive(:error).with("Passenger failed to restart!")
+          expect {
+            quietly { subject.restart_passenger }
+          }.to throw_symbol(:task_has_failed)
+        end
+
+        it 'should return false if restart fails' do
+          expect {
+            quietly { subject.restart_passenger.should be_false }
+          }.to throw_symbol(:task_has_failed)
+        end
       end
     end
   end
