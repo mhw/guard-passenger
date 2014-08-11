@@ -1,10 +1,16 @@
 module Guard
   class Passenger
     module Runner
-      class << self
+      PASSENGER_VERSION = Gem.latest_spec_for('passenger').version
 
+      class << self
         def restart_passenger
-          succeed = system("touch tmp/restart.txt")
+          if PASSENGER_VERSION >= Gem::Version.new('4.0.31')
+            succeed = system("passenger-config restart-app #{ Dir.getwd }")
+          else
+            succeed = system("touch tmp/restart.txt")
+          end
+
           if succeed
             UI.info "Passenger successfully restarted."
           else
@@ -27,7 +33,6 @@ module Guard
           else
             UI.error "Passenger standalone is not installed. You need at least Passenger version >= 3.0.0.\nPlease run 'gem install passenger' or add it to your Gemfile."
             throw :task_has_failed
-            false
           end
         end
 
@@ -43,14 +48,8 @@ module Guard
         end
 
         def passenger_standalone_installed?
-          begin
-            gem "passenger", ">=3.0.0"
-          rescue Gem::LoadError
-            return false
-          end
-          true
+          PASSENGER_VERSION >= Gem::Version.new('3')
         end
-
       end
     end
   end

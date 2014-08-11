@@ -1,6 +1,7 @@
 require 'rubygems'
 require 'guard/passenger'
 require 'rspec'
+require 'rspec/mocks'
 
 ENV["GUARD_ENV"] = 'test'
 
