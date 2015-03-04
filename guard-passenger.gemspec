@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.summary     = 'Guard gem for Passenger'
   s.description = 'Guard::Passenger automatically restarts Passenger when needed.'
 
-  s.add_dependency 'guard', '~> 2.10.0'
+  s.add_dependency 'guard', '~> 2.10'
 
   s.add_development_dependency 'bundler',       '~> 1.6'
   s.add_development_dependency 'rspec',         '~> 3.0'
