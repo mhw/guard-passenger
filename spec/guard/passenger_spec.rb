@@ -253,6 +253,15 @@ describe Guard::Passenger do
         Guard::Passenger::Pinger.should_receive(:ping).with('0.0.0.0', "3000", false, '/test')
         subject.send(method)
       end
+
+      describe 'with standalone disabled' do
+        subject { Guard::Passenger.new({ :standalone => false }) }
+
+        it 'should call "restart_passenger" with standalone option false' do
+          Guard::Passenger::Runner.should_receive(:restart_passenger).with(hash_including(standalone: false)).and_return(true)
+          subject.send(method).should be true
+        end
+      end
     end
   end
 
