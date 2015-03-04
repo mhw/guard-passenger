@@ -105,7 +105,7 @@ describe Guard::Passenger::Runner do
 
       subject.should_receive(:system).with('touch tmp/restart.txt')
       expect {
-        quietly { subject.restart_passenger }
+        quietly { subject.restart_passenger(standalone: true) }
       }.to throw_symbol(:task_has_failed)
     end
 
@@ -114,7 +114,16 @@ describe Guard::Passenger::Runner do
 
       subject.should_receive(:system).with("passenger-config restart-app #{ Dir.getwd }")
       expect {
-        quietly { subject.restart_passenger }
+        quietly { subject.restart_passenger(standalone: true) }
+      }.to throw_symbol(:task_has_failed)
+    end
+
+    it 'should still "touch tmp/restart.txt" for Passenger >= 4.0.31 if not standalone' do
+      stub_const 'Guard::Passenger::Runner::PASSENGER_VERSION', Gem::Version.new('5')
+
+      subject.should_receive(:system).with('touch tmp/restart.txt')
+      expect {
+        quietly { subject.restart_passenger(standalone: false) }
       }.to throw_symbol(:task_has_failed)
     end
 
@@ -125,11 +134,11 @@ describe Guard::Passenger::Runner do
 
         it 'should display a message' do
           Guard::UI.should_receive(:info).with("Passenger successfully restarted.")
-          subject.restart_passenger
+          subject.restart_passenger(standalone: true)
         end
 
         it 'should return true if restart succeeds' do
-          subject.restart_passenger.should be true
+          subject.restart_passenger(standalone: true).should be true
         end
       end
 
@@ -139,11 +148,11 @@ describe Guard::Passenger::Runner do
 
         it 'should display a message' do
           Guard::UI.should_receive(:info).with("Passenger successfully restarted.")
-          subject.restart_passenger
+          subject.restart_passenger(standalone: true)
         end
 
         it 'should return true if restart succeeds' do
-          subject.restart_passenger.should be true
+          subject.restart_passenger(standalone: true).should be true
         end
       end
     end
@@ -156,13 +165,13 @@ describe Guard::Passenger::Runner do
         it 'should display a message' do
           Guard::UI.should_receive(:error).with("Passenger failed to restart!")
           expect {
-            quietly { subject.restart_passenger }
+            quietly { subject.restart_passenger(standalone: true) }
           }.to throw_symbol(:task_has_failed)
         end
 
         it 'should return false if restart fails' do
           expect {
-            quietly { subject.restart_passenger.should be false }
+            quietly { subject.restart_passenger(standalone: true).should be false }
           }.to throw_symbol(:task_has_failed)
         end
       end
@@ -174,13 +183,13 @@ describe Guard::Passenger::Runner do
         it 'should display a message' do
           Guard::UI.should_receive(:error).with("Passenger failed to restart!")
           expect {
-            quietly { subject.restart_passenger }
+            quietly { subject.restart_passenger(standalone: true) }
           }.to throw_symbol(:task_has_failed)
         end
 
         it 'should return false if restart fails' do
           expect {
-            quietly { subject.restart_passenger.should be false }
+            quietly { subject.restart_passenger(standalone: true).should be false }
           }.to throw_symbol(:task_has_failed)
         end
       end

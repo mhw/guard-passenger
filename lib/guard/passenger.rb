@@ -106,7 +106,7 @@ module Guard
 
       def restart_and_ping
         UI.info 'Restarting Passenger...'
-        restarted = Runner.restart_passenger
+        restarted = Runner.restart_passenger(standalone: standalone?)
         Pinger.ping(address, port, notification, ping) if ping
         restarted
       end

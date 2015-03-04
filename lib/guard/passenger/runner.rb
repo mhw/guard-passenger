@@ -4,8 +4,8 @@ module Guard
       PASSENGER_VERSION = Gem.latest_spec_for('passenger').version
 
       class << self
-        def restart_passenger
-          if PASSENGER_VERSION >= Gem::Version.new('4.0.31')
+        def restart_passenger(options = {})
+          if options[:standalone] && PASSENGER_VERSION >= Gem::Version.new('4.0.31')
             succeed = system("passenger-config restart-app #{ Dir.getwd }")
           else
             succeed = system("touch tmp/restart.txt")
