@@ -132,19 +132,19 @@ describe Guard::Passenger::Runner do
           subject.restart_passenger.should be true
         end
       end
-    end
 
-    context 'for Passenger >= 4.0.31' do
-      before(:each) { stub_const 'Guard::Passenger::Runner::PASSENGER_VERSION', Gem::Version.new('5') }
-      before(:each) { subject.should_receive(:system).with("passenger-config restart-app #{ Dir.getwd }").and_return(true) }
+      context 'for Passenger >= 4.0.31' do
+        before(:each) { stub_const 'Guard::Passenger::Runner::PASSENGER_VERSION', Gem::Version.new('5') }
+        before(:each) { subject.should_receive(:system).with("passenger-config restart-app #{ Dir.getwd }").and_return(true) }
 
-      it 'should display a message' do
-        Guard::UI.should_receive(:info).with("Passenger successfully restarted.")
-        subject.restart_passenger
-      end
+        it 'should display a message' do
+          Guard::UI.should_receive(:info).with("Passenger successfully restarted.")
+          subject.restart_passenger
+        end
 
-      it 'should return true if restart succeeds' do
-        subject.restart_passenger.should be true
+        it 'should return true if restart succeeds' do
+          subject.restart_passenger.should be true
+        end
       end
     end
 
